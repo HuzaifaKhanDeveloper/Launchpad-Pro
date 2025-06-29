@@ -1,4 +1,4 @@
-require("@nomicfoundation/hardhat-toolbox");
+require("@nomicfoundation/hardhat-ethers");
 require("dotenv").config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
@@ -32,12 +32,5 @@ module.exports = {
     tests: "./test",
     cache: "./cache",
     artifacts: "./artifacts",
-  },
-  // Disable problematic plugins that require native addons
-  plugins: [],
-  // Override the solidity analyzer to avoid native addon issues
-  typechain: {
-    outDir: "typechain-types",
-    target: "ethers-v6",
   },
 };
