@@ -224,7 +224,7 @@ const Features = () => {
                   className={`
                     p-6 rounded-2xl border transition-all duration-300 cursor-pointer
                     ${activeFeature === index 
-                      ? 'glass border-blue-500/30 shadow-lg shadow-blue-500/10' 
+                      ? 'glass border-gray-600/50 shadow-lg shadow-white/5' 
                       : 'glass-subtle border-gray-700/30 hover:border-gray-600/50'
                     }
                   `}
@@ -239,7 +239,7 @@ const Features = () => {
                       <p className="text-gray-400 text-sm leading-relaxed">{feature.description}</p>
                     </div>
                     {activeFeature === index && (
-                      <CheckCircle className="h-6 w-6 text-blue-400" />
+                      <CheckCircle className="h-6 w-6 text-green-400" />
                     )}
                   </div>
                 </AnimatedCard>
@@ -270,7 +270,7 @@ const Features = () => {
                     className="flex items-center space-x-3 animate-fade-in-up"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
                       <CheckCircle className="h-4 w-4 text-white" />
                     </div>
                     <span className="text-gray-300 leading-relaxed">{detail}</span>
@@ -284,7 +284,7 @@ const Features = () => {
                   <div
                     key={index}
                     className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      index === activeFeature ? 'bg-blue-400 scale-125' : 'bg-gray-600'
+                      index === activeFeature ? 'bg-white scale-125' : 'bg-gray-600'
                     }`}
                   />
                 ))}
