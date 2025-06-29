@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StarIcon, DoorClosedIcon as LockClosedIcon, GiftIcon, BarChartIcon as ChartBarIcon, ClockIcon, Zap, Users, Target, Award } from 'lucide-react';
+import { Star, Lock, Gift, BarChart3, Clock, Zap, Users, Target, Award } from 'lucide-react';
 import { TrendingUp } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useWeb3 } from '../hooks/useWeb3';
@@ -310,7 +310,7 @@ const Staking: React.FC = () => {
           <AnimatedCard delay={100} hoverEffect="lift">
             <div className="glass rounded-2xl p-6 border border-gray-700/50">
               <div className="flex items-center space-x-3 mb-4">
-                <LockClosedIcon className="h-8 w-8 text-blue-400" />
+                <Lock className="h-8 w-8 text-blue-400" />
                 <div>
                   <div className="text-2xl font-bold text-white">{platformStats.totalStaked.toLocaleString()}</div>
                   <div className="text-gray-400 text-sm">Total Staked</div>
@@ -322,7 +322,7 @@ const Staking: React.FC = () => {
           <AnimatedCard delay={200} hoverEffect="lift">
             <div className="glass rounded-2xl p-6 border border-gray-700/50">
               <div className="flex items-center space-x-3 mb-4">
-                <GiftIcon className="h-8 w-8 text-green-400" />
+                <Gift className="h-8 w-8 text-green-400" />
                 <div>
                   <div className="text-2xl font-bold text-white">{platformStats.rewardPool.toLocaleString()}</div>
                   <div className="text-gray-400 text-sm">Reward Pool</div>
@@ -346,7 +346,7 @@ const Staking: React.FC = () => {
           <AnimatedCard delay={400} hoverEffect="lift">
             <div className="glass rounded-2xl p-6 border border-gray-700/50">
               <div className="flex items-center space-x-3 mb-4">
-                <StarIcon className="h-8 w-8 text-yellow-400" />
+                <Star className="h-8 w-8 text-yellow-400" />
                 <div>
                   <div className="text-2xl font-bold text-white">{currentTierInfo.name}</div>
                   <div className="text-gray-400 text-sm">Your Tier</div>
@@ -373,7 +373,7 @@ const Staking: React.FC = () => {
                     <div className="grid md:grid-cols-3 gap-6 mb-8">
                       <div className="glass-dark rounded-lg p-4">
                         <div className="flex items-center space-x-2 mb-2">
-                          <LockClosedIcon className="h-5 w-5 text-blue-400" />
+                          <Lock className="h-5 w-5 text-blue-400" />
                           <span className="text-gray-400 text-sm">Staked</span>
                         </div>
                         <div className="text-2xl font-bold text-white">
@@ -383,7 +383,7 @@ const Staking: React.FC = () => {
 
                       <div className="glass-dark rounded-lg p-4">
                         <div className="flex items-center space-x-2 mb-2">
-                          <GiftIcon className="h-5 w-5 text-green-400" />
+                          <Gift className="h-5 w-5 text-green-400" />
                           <span className="text-gray-400 text-sm">Pending Rewards</span>
                         </div>
                         <div className="text-2xl font-bold text-white">
@@ -393,7 +393,7 @@ const Staking: React.FC = () => {
 
                       <div className="glass-dark rounded-lg p-4">
                         <div className="flex items-center space-x-2 mb-2">
-                          <StarIcon className="h-5 w-5 text-yellow-400" />
+                          <Star className="h-5 w-5 text-yellow-400" />
                           <span className="text-gray-400 text-sm">Current Tier</span>
                         </div>
                         <div className={`inline-flex px-3 py-1 rounded-full text-sm font-medium text-white bg-gradient-to-r ${currentTierInfo.color}`}>
@@ -406,7 +406,7 @@ const Staking: React.FC = () => {
                     {isLocked && (
                       <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6">
                         <div className="flex items-center space-x-2">
-                          <ClockIcon className="h-5 w-5 text-yellow-400" />
+                          <Clock className="h-5 w-5 text-yellow-400" />
                           <div className="text-yellow-300">
                             <strong>Tokens Locked:</strong> Unlocks on {format(unlockDate, 'PPP p')}
                           </div>
@@ -574,7 +574,7 @@ const Staking: React.FC = () => {
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                        <StarIcon className="h-5 w-5 text-white" />
+                        <Star className="h-5 w-5 text-white" />
                       </div>
                       <div>
                         <div className="text-white font-medium">Higher Tier Access</div>
@@ -584,7 +584,7 @@ const Staking: React.FC = () => {
                     
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                        <GiftIcon className="h-5 w-5 text-white" />
+                        <Gift className="h-5 w-5 text-white" />
                       </div>
                       <div>
                         <div className="text-white font-medium">Staking Rewards</div>
@@ -596,7 +596,7 @@ const Staking: React.FC = () => {
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                        <ChartBarIcon className="h-5 w-5 text-white" />
+                        <BarChart3 className="h-5 w-5 text-white" />
                       </div>
                       <div>
                         <div className="text-white font-medium">Early Access</div>
@@ -606,7 +606,7 @@ const Staking: React.FC = () => {
                     
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
-                        <LockClosedIcon className="h-5 w-5 text-white" />
+                        <Lock className="h-5 w-5 text-white" />
                       </div>
                       <div>
                         <div className="text-white font-medium">Guaranteed Allocations</div>
