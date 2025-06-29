@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Rocket, User, ChevronDown, BarChart3, Coins, Zap, Wallet, Plus } from 'lucide-react';
+import { Menu, X, Rocket, User, ChevronDown, BarChart3, Coins, Zap, Wallet, Plus, Copy, ExternalLink, LogOut } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface NavigationItem {
   name: string;
@@ -147,7 +148,7 @@ const Navbar: React.FC = () => {
         isConnecting: false
       });
     } else {
-      // User switched accounts - don't show toast
+      // User switched accounts
       updateWalletInfo(accounts[0]);
     }
   };
@@ -159,6 +160,20 @@ const Navbar: React.FC = () => {
 
   const formatAddress = (address: string): string => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const copyAddress = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(wallet.address);
+      toast.success('Address copied to clipboard');
+    } catch (error) {
+      toast.error('Failed to copy address');
+    }
+  };
+
+  const openEtherscan = (): void => {
+    const url = `https://sepolia.etherscan.io/address/${wallet.address}`;
+    window.open(url, '_blank');
   };
 
   const isActive = (path: string): boolean => location.pathname === path;
@@ -174,7 +189,7 @@ const Navbar: React.FC = () => {
 
   const connectWallet = async (): Promise<void> => {
     if (!window.ethereum) {
-      alert('MetaMask is not installed. Please install it to use this feature.');
+      toast.error('MetaMask is not installed. Please install it to use this feature.');
       return;
     }
 
@@ -187,16 +202,16 @@ const Navbar: React.FC = () => {
       
       if (accounts.length > 0) {
         await updateWalletInfo(accounts[0]);
+        toast.success('Wallet connected successfully!');
       }
     } catch (error: any) {
       console.error('Failed to connect wallet:', error);
       setWallet(prev => ({ ...prev, isConnecting: false }));
       
       if (error.code === 4001) {
-        // User rejected the request
-        alert('Please connect to MetaMask to continue.');
+        toast.error('Please connect to MetaMask to continue.');
       } else {
-        alert('Failed to connect wallet. Please try again.');
+        toast.error('Failed to connect wallet. Please try again.');
       }
     }
   };
@@ -209,6 +224,7 @@ const Navbar: React.FC = () => {
       isConnecting: false
     });
     setShowWalletDropdown(false);
+    toast.success('Wallet disconnected');
   };
 
   return (
@@ -223,7 +239,6 @@ const Navbar: React.FC = () => {
           <Link to="/" className="flex items-center space-x-3 group flex-shrink-0">
             <div className="relative p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl group-hover:scale-105 transition-transform duration-300 shadow-lg">
               <Rocket className="h-6 w-6 text-white" />
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
             </div>
             <div className="hidden sm:block">
               <span className="text-xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
@@ -307,61 +322,112 @@ const Navbar: React.FC = () => {
 
             {isConnected ? (
               <div className="flex items-center space-x-2">
-                {/* Compact Wallet Info with Dropdown */}
+                {/* Enhanced Wallet Info with Dropdown */}
                 <div className="relative wallet-dropdown">
                   <button
                     onClick={() => setShowWalletDropdown(!showWalletDropdown)}
-                    className="flex items-center space-x-3 px-3 py-2 bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700/50 hover:bg-slate-700/60 transition-all duration-300"
+                    className="flex items-center space-x-3 px-4 py-2.5 glass rounded-xl border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 group"
                   >
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <div className="flex items-center space-x-3">
+                      {/* Status Indicator */}
+                      <div className="relative">
+                        <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                        <div className="absolute inset-0 w-3 h-3 bg-green-400 rounded-full animate-ping opacity-75"></div>
+                      </div>
+                      
+                      {/* Wallet Info */}
                       <div className="text-left">
-                        <div className="text-xs text-slate-400">Balance</div>
-                        <div className="text-sm font-semibold text-white">{wallet.balance} ETH</div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-semibold text-white">{formatAddress(wallet.address)}</span>
+                          <div className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-medium">
+                            Sepolia
+                          </div>
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {wallet.balance} ETH
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-xs text-slate-400">Address</div>
-                      <div className="text-sm font-semibold text-green-400">{formatAddress(wallet.address)}</div>
-                    </div>
+                    
                     <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
                       showWalletDropdown ? 'rotate-180' : ''
                     }`} />
                   </button>
 
-                  {/* Wallet Dropdown */}
+                  {/* Enhanced Wallet Dropdown */}
                   {showWalletDropdown && (
-                    <div className="absolute top-full right-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-md rounded-xl border border-slate-700/50 shadow-xl shadow-slate-900/30 py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="absolute top-full right-0 mt-2 w-80 bg-slate-800/95 backdrop-blur-md rounded-xl border border-slate-700/50 shadow-xl shadow-slate-900/30 py-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                      {/* Header */}
                       <div className="px-4 py-3 border-b border-slate-700/50">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                          <div>
-                            <div className="text-sm font-medium text-white">Wallet Connected</div>
-                            <div className="text-xs text-slate-400">{wallet.address}</div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                              <Wallet className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-white">Wallet Connected</div>
+                              <div className="text-xs text-green-400 flex items-center space-x-1">
+                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span>Sepolia Testnet</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
+
+                      {/* Address Section */}
                       <div className="px-4 py-3 border-b border-slate-700/50">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-slate-400">Balance:</span>
-                          <span className="text-sm font-semibold text-white">{wallet.balance} ETH</span>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-slate-400">Address</span>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={copyAddress}
+                              className="p-1 text-slate-400 hover:text-white transition-colors rounded"
+                              title="Copy address"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={openEtherscan}
+                              className="p-1 text-slate-400 hover:text-white transition-colors rounded"
+                              title="View on Etherscan"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="text-sm font-mono text-white bg-slate-900/50 rounded-lg px-3 py-2 break-all">
+                          {wallet.address}
                         </div>
                       </div>
+
+                      {/* Balance Section */}
+                      <div className="px-4 py-3 border-b border-slate-700/50">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-slate-400">Balance</span>
+                          <div className="text-right">
+                            <div className="text-lg font-semibold text-white">{wallet.balance} ETH</div>
+                            <div className="text-xs text-slate-400">Sepolia Testnet</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
                       <div className="p-2 space-y-1">
                         <Link 
                           to="/dashboard"
                           onClick={() => setShowWalletDropdown(false)}
-                          className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors duration-200"
+                          className="flex items-center space-x-3 w-full px-3 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors duration-200"
                         >
                           <User className="h-4 w-4" />
                           <span>Dashboard</span>
                         </Link>
                         <button
                           onClick={disconnectWallet}
-                          className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors duration-200"
+                          className="flex items-center space-x-3 w-full px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors duration-200"
                         >
-                          <X className="h-4 w-4" />
-                          <span>Disconnect</span>
+                          <LogOut className="h-4 w-4" />
+                          <span>Disconnect Wallet</span>
                         </button>
                       </div>
                     </div>
@@ -372,11 +438,11 @@ const Navbar: React.FC = () => {
               <button
                 onClick={connectWallet}
                 disabled={wallet.isConnecting}
-                className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-blue-500/25 hover:scale-105"
+                className="flex items-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-blue-500/25 hover:scale-105"
               >
                 {wallet.isConnecting ? (
                   <>
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     <span>Connecting...</span>
                   </>
                 ) : (
@@ -466,12 +532,18 @@ const Navbar: React.FC = () => {
           <div className="pt-6 border-t border-slate-700/50">
             {isConnected ? (
               <div className="space-y-4">
-                <div className="bg-slate-700/30 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-slate-400">Connected</span>
-                    <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-full">
-                      {formatAddress(wallet.address)}
-                    </span>
+                <div className="glass rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span className="text-sm text-green-400 font-medium">Connected</span>
+                    </div>
+                    <div className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-medium">
+                      Sepolia
+                    </div>
+                  </div>
+                  <div className="text-sm font-mono text-white bg-slate-900/50 rounded-lg px-3 py-2 mb-3 break-all">
+                    {wallet.address}
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400">Balance:</span>
@@ -507,7 +579,7 @@ const Navbar: React.FC = () => {
               >
                 {wallet.isConnecting ? (
                   <>
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     <span>Connecting...</span>
                   </>
                 ) : (
