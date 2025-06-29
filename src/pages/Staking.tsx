@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StarIcon, LockClosedIcon, GiftIcon, ChartBarIcon, ClockIcon, Zap, Users, Target, Award } from '@heroicons/react/24/outline';
+import { StarIcon, LockClosedIcon, GiftIcon, ChartBarIcon, ClockIcon, Zap, Users, Target, Award } from 'lucide-react';
 import { TrendingUp } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useWeb3 } from '../hooks/useWeb3';
