@@ -7,7 +7,6 @@ import StatsCard from '../components/common/StatsCard';
 
 const Analytics: React.FC = () => {
   const { sales, fetchSales } = useTokenSaleStore();
-  const [timeRange, setTimeRange] = useState('7d');
   const [selectedMetric, setSelectedMetric] = useState('volume');
 
   useEffect(() => {
@@ -74,7 +73,6 @@ const Analytics: React.FC = () => {
   const totalRaised = sales.reduce((sum, sale) => sum + sale.raised, 0);
   const totalParticipants = sales.reduce((sum, sale) => sum + sale.participants, 0);
   const activeSales = sales.filter(sale => sale.status === 'active').length;
-  const avgSaleSize = sales.length > 0 ? totalRaised / sales.length : 0;
 
   const stats = [
     {
@@ -111,14 +109,6 @@ const Analytics: React.FC = () => {
     }
   ];
 
-  const timeRanges = [
-    { value: '24h', label: '24 Hours' },
-    { value: '7d', label: '7 Days' },
-    { value: '30d', label: '30 Days' },
-    { value: '90d', label: '90 Days' },
-    { value: '1y', label: '1 Year' }
-  ];
-
   const metrics = [
     { value: 'volume', label: 'Volume', icon: DollarSign },
     { value: 'participants', label: 'Participants', icon: Users },
@@ -143,44 +133,24 @@ const Analytics: React.FC = () => {
           </div>
         </AnimatedCard>
 
-        {/* Controls */}
+        {/* Metric Selector */}
         <AnimatedCard direction="up" delay={200} className="mb-8">
           <div className="glass rounded-2xl p-6 border border-gray-700/50">
-            <div className="flex flex-col lg:flex-row gap-4 justify-between">
-              {/* Time Range */}
-              <div className="flex space-x-2">
-                {timeRanges.map((range) => (
-                  <button
-                    key={range.value}
-                    onClick={() => setTimeRange(range.value)}
-                    className={`px-4 py-2 rounded-lg border transition-all duration-300 ${
-                      timeRange === range.value
-                        ? 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-500/25'
-                        : 'glass text-white border-gray-600 hover:border-gray-500'
-                    }`}
-                  >
-                    {range.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Metric Selector */}
-              <div className="flex space-x-2">
-                {metrics.map((metric) => (
-                  <button
-                    key={metric.value}
-                    onClick={() => setSelectedMetric(metric.value)}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition-all duration-300 ${
-                      selectedMetric === metric.value
-                        ? 'bg-purple-500 border-purple-500 text-white shadow-lg shadow-purple-500/25'
-                        : 'glass text-white border-gray-600 hover:border-gray-500'
-                    }`}
-                  >
-                    <metric.icon className="h-4 w-4" />
-                    <span>{metric.label}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="flex flex-wrap justify-center gap-4">
+              {metrics.map((metric) => (
+                <button
+                  key={metric.value}
+                  onClick={() => setSelectedMetric(metric.value)}
+                  className={`flex items-center space-x-2 px-6 py-3 rounded-lg border transition-all duration-300 ${
+                    selectedMetric === metric.value
+                      ? 'bg-blue-500 border-blue-500 text-white shadow-lg'
+                      : 'glass text-white border-gray-600 hover:border-gray-500'
+                  }`}
+                >
+                  <metric.icon className="h-4 w-4" />
+                  <span>{metric.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         </AnimatedCard>

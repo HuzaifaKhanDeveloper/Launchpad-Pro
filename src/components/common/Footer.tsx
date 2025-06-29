@@ -184,25 +184,6 @@ const Footer: React.FC = () => {
             </div>
           </div>
         </AnimatedCard>
-
-        {/* Additional Info */}
-        <AnimatedCard direction="up" delay={700} className="mt-8">
-          <div className="glass rounded-2xl p-6 border border-gray-700/50">
-            <div className="text-center">
-              <h4 className="text-white font-semibold mb-2">Ready to Launch?</h4>
-              <p className="text-gray-400 text-sm mb-4">
-                Join the next generation of decentralized token launches
-              </p>
-              <Link
-                to="/create-sale"
-                className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 shadow-lg"
-              >
-                <Rocket className="h-4 w-4" />
-                <span>Start Your Sale</span>
-              </Link>
-            </div>
-          </div>
-        </AnimatedCard>
       </div>
     </footer>
   );
