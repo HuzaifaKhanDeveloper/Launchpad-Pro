@@ -1,43 +1,68 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, TrendingUp, Clock, CheckCircle } from 'lucide-react';
+import { Search, Filter, TrendingUp, Clock, CheckCircle, RefreshCw } from 'lucide-react';
 import { useTokenSaleStore } from '../store/tokenSaleStore';
 import TokenSaleCard from '../components/sales/TokenSaleCard';
+import TokenSaleCardSkeleton from '../components/sales/TokenSaleCardSkeleton';
 import AnimatedCard from '../components/common/AnimatedCard';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import LoadingStates from '../components/common/LoadingStates';
+import ProgressiveLoader from '../components/common/ProgressiveLoader';
 import { TokenSale } from '../types';
+import { debounce } from '../utils/performance';
 
 const TokenSales: React.FC = () => {
-  const { sales, fetchSales, isLoading } = useTokenSaleStore();
+  const { sales, fetchSales, isLoading, error } = useTokenSaleStore();
   const [filter, setFilter] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [filteredSales, setFilteredSales] = useState<TokenSale[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     fetchSales();
   }, [fetchSales]);
 
+  // Debounced search to improve performance
+  const debouncedSearch = debounce((term: string) => {
+    setIsSearching(false);
+    applyFilters(term, filter, sortBy);
+  }, 300);
+
   useEffect(() => {
-    let filtered = sales;
+    if (searchTerm) {
+      setIsSearching(true);
+      debouncedSearch(searchTerm);
+    } else {
+      setIsSearching(false);
+      applyFilters(searchTerm, filter, sortBy);
+    }
+  }, [searchTerm]);
+
+  useEffect(() => {
+    applyFilters(searchTerm, filter, sortBy);
+  }, [sales, filter, sortBy]);
+
+  const applyFilters = (search: string, filterType: string, sort: string) => {
+    let filtered = [...sales];
 
     // Apply status filter
-    if (filter !== 'All') {
+    if (filterType !== 'All') {
       filtered = filtered.filter(sale => 
-        sale.status.toLowerCase() === filter.toLowerCase()
+        sale.status.toLowerCase() === filterType.toLowerCase()
       );
     }
 
     // Apply search filter
-    if (searchTerm) {
+    if (search.trim()) {
+      const searchLower = search.toLowerCase();
       filtered = filtered.filter(sale =>
-        sale.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sale.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sale.description.toLowerCase().includes(searchTerm.toLowerCase())
+        sale.name.toLowerCase().includes(searchLower) ||
+        sale.symbol.toLowerCase().includes(searchLower) ||
+        sale.description.toLowerCase().includes(searchLower)
       );
     }
 
     // Apply sorting
-    switch (sortBy) {
+    switch (sort) {
       case 'newest':
         filtered.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
         break;
@@ -50,39 +75,94 @@ const TokenSales: React.FC = () => {
       case 'participants':
         filtered.sort((a, b) => b.participants - a.participants);
         break;
+      case 'alphabetical':
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
     }
 
     setFilteredSales(filtered);
-  }, [sales, filter, searchTerm, sortBy]);
+  };
 
   const filterOptions = [
-    { value: 'All', label: 'All Sales', icon: Filter },
-    { value: 'Active', label: 'Active', icon: TrendingUp },
-    { value: 'Upcoming', label: 'Upcoming', icon: Clock },
-    { value: 'Ended', label: 'Ended', icon: CheckCircle }
+    { value: 'All', label: 'All Sales', icon: Filter, count: sales.length },
+    { value: 'Active', label: 'Active', icon: TrendingUp, count: sales.filter(s => s.status === 'active').length },
+    { value: 'Upcoming', label: 'Upcoming', icon: Clock, count: sales.filter(s => s.status === 'upcoming').length },
+    { value: 'Ended', label: 'Ended', icon: CheckCircle, count: sales.filter(s => s.status === 'ended').length }
   ];
 
   const sortOptions = [
     { value: 'newest', label: 'Newest First' },
     { value: 'ending', label: 'Ending Soon' },
     { value: 'raised', label: 'Most Raised' },
-    { value: 'participants', label: 'Most Participants' }
+    { value: 'participants', label: 'Most Participants' },
+    { value: 'alphabetical', label: 'A-Z' }
   ];
 
-  if (isLoading) {
+  const handleRetry = () => {
+    fetchSales();
+  };
+
+  const renderSkeletonGrid = () => (
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <TokenSaleCardSkeleton key={index} delay={index * 100} />
+      ))}
+    </div>
+  );
+
+  const renderContent = () => {
+    if (error) {
+      return (
+        <LoadingStates
+          type="error"
+          title="Failed to Load Token Sales"
+          message="We couldn't load the token sales. Please check your connection and try again."
+          onRetry={handleRetry}
+        />
+      );
+    }
+
+    if (!isLoading && filteredSales.length === 0 && sales.length === 0) {
+      return (
+        <LoadingStates
+          type="empty"
+          title="No Token Sales Yet"
+          message="Be the first to launch your project on our platform! Create your token sale and reach thousands of potential investors."
+          onRetry={handleRetry}
+        />
+      );
+    }
+
+    if (!isLoading && filteredSales.length === 0 && sales.length > 0) {
+      return (
+        <LoadingStates
+          type="empty"
+          title={searchTerm ? 'No Results Found' : `No ${filter} Sales`}
+          message={
+            searchTerm 
+              ? `No sales match "${searchTerm}". Try adjusting your search terms.`
+              : `There are currently no ${filter.toLowerCase()} token sales. Try a different filter.`
+          }
+          onRetry={() => {
+            setSearchTerm('');
+            setFilter('All');
+          }}
+        />
+      );
+    }
+
     return (
-      <div className="min-h-screen py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center py-24">
-            <div className="text-center">
-              <LoadingSpinner size="lg" />
-              <p className="text-gray-400 mt-4">Loading token sales...</p>
-            </div>
-          </div>
-        </div>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {filteredSales.map((sale, index) => (
+          <TokenSaleCard 
+            key={sale.id} 
+            sale={sale} 
+            delay={index * 50} // Reduced delay for faster loading feel
+          />
+        ))}
       </div>
     );
-  }
+  };
 
   return (
     <div className="min-h-screen py-12 bg-slate-900">
@@ -113,6 +193,11 @@ const TokenSales: React.FC = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
+                {isSearching && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <RefreshCw className="h-4 w-4 text-blue-400 animate-spin" />
+                  </div>
+                )}
               </div>
 
               {/* Sort */}
@@ -148,56 +233,64 @@ const TokenSales: React.FC = () => {
               >
                 <filterOption.icon className="h-4 w-4" />
                 <span>{filterOption.label}</span>
+                {filterOption.count > 0 && (
+                  <span className={`
+                    px-2 py-1 rounded-full text-xs font-medium
+                    ${filter === filterOption.value 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-gray-600/50 text-gray-300'
+                    }
+                  `}>
+                    {filterOption.count}
+                  </span>
+                )}
               </button>
             ))}
           </div>
         </AnimatedCard>
 
-        {/* Sales Grid */}
-        {filteredSales.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredSales.map((sale, index) => (
-              <TokenSaleCard 
-                key={sale.id} 
-                sale={sale} 
-                delay={index * 100}
-              />
-            ))}
-          </div>
-        ) : (
-          <AnimatedCard direction="scale" delay={400}>
-            <div className="text-center py-12">
-              <div className="w-24 h-24 glass rounded-full flex items-center justify-center mx-auto mb-6">
-                <Search className="h-12 w-12 text-gray-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">
-                {searchTerm ? 'No Results Found' : 
-                 filter === 'All' ? 'No Token Sales Yet' : `No ${filter} Sales`}
-              </h3>
-              <p className="text-gray-400 mb-6">
-                {searchTerm ? `No sales match "${searchTerm}"` :
-                 filter === 'All' 
-                   ? 'Be the first to launch your project on our platform'
-                   : `There are currently no ${filter.toLowerCase()} token sales`
-                }
+        {/* Results Count */}
+        {!isLoading && (
+          <AnimatedCard direction="up" delay={400} className="mb-6">
+            <div className="text-center">
+              <p className="text-gray-400">
+                {isSearching ? (
+                  <span className="flex items-center justify-center space-x-2">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span>Searching...</span>
+                  </span>
+                ) : (
+                  `Showing ${filteredSales.length} of ${sales.length} token sales`
+                )}
               </p>
-              {!searchTerm && (
-                <button
-                  onClick={() => setFilter('All')}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
-                >
-                  View All Sales
-                </button>
-              )}
             </div>
           </AnimatedCard>
         )}
 
-        {/* Load More */}
-        {filteredSales.length > 0 && (
+        {/* Sales Grid with Progressive Loading */}
+        <ProgressiveLoader
+          isLoading={isLoading}
+          skeleton={renderSkeletonGrid()}
+          delay={200}
+          minLoadingTime={800}
+        >
+          {renderContent()}
+        </ProgressiveLoader>
+
+        {/* Load More Button */}
+        {!isLoading && filteredSales.length > 0 && filteredSales.length >= 9 && (
           <AnimatedCard direction="up" delay={600} className="text-center mt-12">
-            <button className="px-8 py-3 glass text-white rounded-lg border border-gray-600 hover:border-gray-500 hover:bg-gray-700/50 transition-all duration-300">
-              Load More Sales
+            <button 
+              onClick={() => {
+                // Implement pagination logic here
+                console.log('Load more sales');
+              }}
+              className="px-8 py-3 glass text-white rounded-lg border border-gray-600 hover:border-gray-500 hover:bg-gray-700/50 transition-all duration-300 group"
+            >
+              <span className="flex items-center space-x-2">
+                <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
+                <span>Load More Sales</span>
+              </span>
             </button>
           </AnimatedCard>
         )}

@@ -102,3 +102,90 @@ export const trackWebVitals = () => {
     // Silently fail if web-vitals is not available
   });
 };
+
+// Image optimization utilities
+export const getOptimizedImageUrl = (url: string, width?: number, height?: number): string => {
+  if (url.includes('pexels.com')) {
+    const baseUrl = url.split('?')[0];
+    const params = new URLSearchParams();
+    
+    if (width) params.set('w', width.toString());
+    if (height) params.set('h', height.toString());
+    params.set('auto', 'compress');
+    params.set('cs', 'tinysrgb');
+    params.set('fit', 'crop');
+    
+    return `${baseUrl}?${params.toString()}`;
+  }
+  
+  return url;
+};
+
+// Intersection Observer utility
+export const createIntersectionObserver = (
+  callback: IntersectionObserverCallback,
+  options?: IntersectionObserverInit
+) => {
+  return new IntersectionObserver(callback, {
+    threshold: 0.1,
+    rootMargin: '50px',
+    ...options
+  });
+};
+
+// Virtual scrolling utility
+export const calculateVisibleItems = (
+  scrollTop: number,
+  itemHeight: number,
+  containerHeight: number,
+  totalItems: number,
+  overscan: number = 5
+) => {
+  const start = Math.floor(scrollTop / itemHeight);
+  const end = Math.min(
+    start + Math.ceil(containerHeight / itemHeight),
+    totalItems - 1
+  );
+
+  return {
+    start: Math.max(0, start - overscan),
+    end: Math.min(totalItems - 1, end + overscan)
+  };
+};
+
+// Memory management
+export const cleanupResources = (resources: Array<() => void>) => {
+  resources.forEach(cleanup => {
+    try {
+      cleanup();
+    } catch (error) {
+      console.warn('Error during cleanup:', error);
+    }
+  });
+};
+
+// Request idle callback polyfill
+export const requestIdleCallback = (
+  callback: (deadline: { timeRemaining: () => number }) => void,
+  options?: { timeout?: number }
+) => {
+  if ('requestIdleCallback' in window) {
+    return window.requestIdleCallback(callback, options);
+  }
+  
+  // Fallback for browsers that don't support requestIdleCallback
+  return setTimeout(() => {
+    callback({
+      timeRemaining: () => 50 // Assume 50ms available
+    });
+  }, 1);
+};
+
+// Cancel idle callback polyfill
+export const cancelIdleCallback = (id: number) => {
+  if ('cancelIdleCallback' in window) {
+    return window.cancelIdleCallback(id);
+  }
+  
+  return clearTimeout(id);
+};

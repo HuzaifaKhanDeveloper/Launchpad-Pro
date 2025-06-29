@@ -6,10 +6,13 @@ interface TokenSaleState {
   sales: TokenSale[];
   activeSale: TokenSale | null;
   isLoading: boolean;
+  error: string | null;
+  lastFetch: number | null;
   fetchSales: () => Promise<void>;
   fetchSaleFromContract: (saleId: number) => Promise<TokenSale | null>;
   setSales: (sales: TokenSale[]) => void;
   setActiveSale: (sale: TokenSale | null) => void;
+  clearError: () => void;
 }
 
 // Enhanced mock data for development
@@ -82,6 +85,75 @@ const mockSales: TokenSale[] = [
     website: 'https://gamefiprotocol.com',
     twitter: 'https://twitter.com/gamefiprotocol',
     telegram: 'https://t.me/gamefiprotocol'
+  },
+  {
+    id: '3',
+    name: 'AI Protocol',
+    symbol: 'AIP',
+    description: 'Cutting-edge artificial intelligence platform for decentralized machine learning and data processing.',
+    tokenAddress: '0x9876543210987654321098765432109876543210',
+    saleType: 'lottery',
+    startTime: new Date(Date.now() - 12 * 60 * 60 * 1000),
+    endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+    totalSupply: 1500000,
+    tokenPrice: 0.08,
+    softCap: 40,
+    hardCap: 400,
+    raised: 89,
+    participants: 234,
+    status: 'active',
+    whitelist: true,
+    vestingEnabled: true,
+    logo: 'https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    website: 'https://aiprotocol.io',
+    twitter: 'https://twitter.com/aiprotocol',
+    telegram: 'https://t.me/aiprotocol'
+  },
+  {
+    id: '4',
+    name: 'MetaVerse Coin',
+    symbol: 'MVC',
+    description: 'Virtual reality metaverse platform with immersive experiences and digital asset ownership.',
+    tokenAddress: '0x5432109876543210987654321098765432109876',
+    saleType: 'fixed',
+    startTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    endTime: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    totalSupply: 800000,
+    tokenPrice: 0.12,
+    softCap: 30,
+    hardCap: 300,
+    raised: 267,
+    participants: 456,
+    status: 'ended',
+    whitelist: false,
+    vestingEnabled: true,
+    logo: 'https://images.pexels.com/photos/2007647/pexels-photo-2007647.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    website: 'https://metaversecoin.io',
+    twitter: 'https://twitter.com/metaversecoin',
+    telegram: 'https://t.me/metaversecoin'
+  },
+  {
+    id: '5',
+    name: 'Green Energy Token',
+    symbol: 'GRN',
+    description: 'Sustainable energy blockchain platform promoting renewable energy adoption and carbon credit trading.',
+    tokenAddress: '0x1098765432109876543210987654321098765432',
+    saleType: 'dutch',
+    startTime: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    endTime: new Date(Date.now() - 6 * 60 * 60 * 1000),
+    totalSupply: 1200000,
+    tokenPrice: 0.06,
+    softCap: 20,
+    hardCap: 200,
+    raised: 178,
+    participants: 312,
+    status: 'ended',
+    whitelist: true,
+    vestingEnabled: false,
+    logo: 'https://images.pexels.com/photos/414837/pexels-photo-414837.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+    website: 'https://greenenergy.io',
+    twitter: 'https://twitter.com/greenenergy',
+    telegram: 'https://t.me/greenenergy'
   }
 ];
 
@@ -89,27 +161,62 @@ export const useTokenSaleStore = create<TokenSaleState>((set, get) => ({
   sales: [],
   activeSale: null,
   isLoading: false,
+  error: null,
+  lastFetch: null,
 
   fetchSales: async () => {
-    set({ isLoading: true });
+    const now = Date.now();
+    const lastFetch = get().lastFetch;
+    
+    // Avoid fetching too frequently (cache for 30 seconds)
+    if (lastFetch && now - lastFetch < 30000) {
+      return;
+    }
+
+    set({ isLoading: true, error: null });
     
     try {
       // Try to fetch from contract if available
       if (CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY) {
         const realSales = await get().fetchRealSales();
         if (realSales.length > 0) {
-          set({ sales: realSales, isLoading: false });
+          set({ 
+            sales: realSales, 
+            isLoading: false, 
+            error: null,
+            lastFetch: now 
+          });
           return;
         }
       }
       
+      // Simulate network delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      
       // Fallback to mock data
-      await new Promise(resolve => setTimeout(resolve, 800));
-      set({ sales: mockSales, isLoading: false });
-    } catch (error) {
+      set({ 
+        sales: mockSales, 
+        isLoading: false, 
+        error: null,
+        lastFetch: now 
+      });
+    } catch (error: any) {
       console.error('Failed to fetch sales:', error);
-      // Fallback to mock data
-      set({ sales: mockSales, isLoading: false });
+      
+      // Set error state
+      set({ 
+        isLoading: false, 
+        error: error.message || 'Failed to fetch token sales'
+      });
+      
+      // Fallback to mock data after a delay
+      setTimeout(() => {
+        set({ 
+          sales: mockSales, 
+          error: null,
+          lastFetch: now 
+        });
+      }, 2000);
     }
   },
 
@@ -197,4 +304,5 @@ export const useTokenSaleStore = create<TokenSaleState>((set, get) => ({
 
   setSales: (sales) => set({ sales }),
   setActiveSale: (sale) => set({ activeSale: sale }),
+  clearError: () => set({ error: null }),
 }));
