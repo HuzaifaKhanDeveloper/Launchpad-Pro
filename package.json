@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "compile": "hardhat compile",
+    "compile": "hardhat compile --force",
+    "compile:simple": "echo 'Compilation skipped in WebContainer environment'",
     "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
     "deploy:all": "hardhat run scripts/deployAll.js --network sepolia",
     "verify:sepolia": "hardhat verify --network sepolia"
@@ -38,7 +39,6 @@
   "devDependencies": {
     "@eslint/js": "^9.9.1",
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
-    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
