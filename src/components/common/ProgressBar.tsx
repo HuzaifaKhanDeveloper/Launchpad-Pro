@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 
 interface ProgressBarProps {
   value: number;
@@ -11,7 +11,7 @@ interface ProgressBarProps {
   className?: string;
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({
+const ProgressBar: React.FC<ProgressBarProps> = memo(({
   value,
   max,
   label,
@@ -69,7 +69,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
             ${heights[size]} 
             bg-gradient-to-r ${colors[color]} 
             rounded-full transition-all duration-1000 ease-out
-            relative overflow-hidden
+            relative overflow-hidden will-change-transform
           `}
           style={{ width: `${animatedValue}%` }}
         >
@@ -79,6 +79,8 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
       </div>
     </div>
   );
-};
+});
+
+ProgressBar.displayName = 'ProgressBar';
 
 export default ProgressBar;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarIcon, UsersIcon, CurrencyDollarIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
@@ -7,16 +7,17 @@ import { useTokenSale } from '../../hooks/useTokenSale';
 import { useWeb3 } from '../../hooks/useWeb3';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from 'react-hot-toast';
-import AnimatedCard from '../common/AnimatedCard';
+import OptimizedAnimatedCard from '../common/OptimizedAnimatedCard';
 import ProgressBar from '../common/ProgressBar';
 import GradientButton from '../common/GradientButton';
+import LazyImage from '../common/LazyImage';
 
 interface TokenSaleCardProps {
   sale: TokenSale;
   delay?: number;
 }
 
-const TokenSaleCard: React.FC<TokenSaleCardProps> = ({ sale, delay = 0 }) => {
+const TokenSaleCard: React.FC<TokenSaleCardProps> = memo(({ sale, delay = 0 }) => {
   const { buyTokens, isLoading } = useTokenSale();
   const { isConnected } = useWeb3();
   const { user } = useAuthStore();
@@ -58,24 +59,20 @@ const TokenSaleCard: React.FC<TokenSaleCardProps> = ({ sale, delay = 0 }) => {
       return;
     }
 
-    // Validate sale ID
     if (!sale.id || isNaN(parseInt(sale.id))) {
       toast.error('Invalid sale ID');
       return;
     }
 
     try {
-      // Quick buy for 0.1 ETH worth of tokens with proper validation
       const ethAmount = '0.1';
       const tokenAmount = (0.1 / sale.tokenPrice).toFixed(6);
       
-      // Validate amounts before transaction
       if (parseFloat(tokenAmount) <= 0) {
         toast.error('Invalid token amount calculated');
         return;
       }
 
-      // Check if sale has enough tokens remaining
       const remainingTokens = sale.totalSupply - (sale.raised / sale.tokenPrice);
       if (parseFloat(tokenAmount) > remainingTokens) {
         toast.error('Not enough tokens remaining in sale');
@@ -86,7 +83,6 @@ const TokenSaleCard: React.FC<TokenSaleCardProps> = ({ sale, delay = 0 }) => {
     } catch (error: any) {
       console.error('Quick buy failed:', error);
       
-      // More specific error handling
       if (error.message.includes('Invalid sale ID')) {
         toast.error('This sale is not available for purchase');
       } else if (error.message.includes('insufficient funds')) {
@@ -104,19 +100,19 @@ const TokenSaleCard: React.FC<TokenSaleCardProps> = ({ sale, delay = 0 }) => {
   const progressPercentage = Math.min((sale.raised / sale.hardCap) * 100, 100);
 
   return (
-    <AnimatedCard 
+    <OptimizedAnimatedCard 
       delay={delay} 
       hoverEffect="lift" 
-      className="glass rounded-2xl p-6 border border-gray-700/50 group"
+      className="glass rounded-2xl p-6 border border-gray-700/50 group will-change-transform"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="relative">
-            <img 
+            <LazyImage 
               src={sale.logo} 
               alt={sale.name}
-              className="w-12 h-12 rounded-xl object-cover ring-2 ring-gray-600/50 group-hover:ring-blue-500/50 transition-all duration-300"
+              className="w-12 h-12 rounded-xl ring-2 ring-gray-600/50 group-hover:ring-blue-500/50 transition-all duration-300"
             />
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-800 animate-pulse"></div>
           </div>
@@ -233,8 +229,10 @@ const TokenSaleCard: React.FC<TokenSaleCardProps> = ({ sale, delay = 0 }) => {
           </div>
         )}
       </div>
-    </AnimatedCard>
+    </OptimizedAnimatedCard>
   );
-};
+});
+
+TokenSaleCard.displayName = 'TokenSaleCard';
 
 export default TokenSaleCard;

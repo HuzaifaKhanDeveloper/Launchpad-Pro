@@ -12,9 +12,9 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   className = '' 
 }) => {
   const sizeClasses = {
-    sm: 'w-4 h-4 border-2',
-    md: 'w-8 h-8 border-3',
-    lg: 'w-12 h-12 border-4'
+    sm: 'w-4 h-4',
+    md: 'w-8 h-8',
+    lg: 'w-12 h-12'
   };
 
   const colorClasses = {
@@ -28,9 +28,11 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       className={`
         ${sizeClasses[size]} 
         ${colorClasses[color]} 
-        rounded-full animate-spin
+        border-2 rounded-full animate-spin will-change-transform
         ${className}
       `}
+      role="status"
+      aria-label="Loading"
     />
   );
 };

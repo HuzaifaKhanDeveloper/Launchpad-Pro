@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { DivideIcon as LucideIcon } from 'lucide-react';
-import AnimatedCard from './AnimatedCard';
+import React, { useState, useEffect, memo } from 'react';
+import { LucideIcon } from 'lucide-react';
+import OptimizedAnimatedCard from './OptimizedAnimatedCard';
 
 interface StatsCardProps {
   title: string;
@@ -13,7 +13,7 @@ interface StatsCardProps {
   animated?: boolean;
 }
 
-const StatsCard: React.FC<StatsCardProps> = ({
+const StatsCard: React.FC<StatsCardProps> = memo(({
   title,
   value,
   change,
@@ -28,8 +28,8 @@ const StatsCard: React.FC<StatsCardProps> = ({
   useEffect(() => {
     if (!animated || typeof value !== 'number') return;
 
-    const duration = 2000; // 2 seconds
-    const steps = 60;
+    const duration = 1500; // Reduced from 2000ms
+    const steps = 30; // Reduced from 60
     const increment = value / steps;
     let current = 0;
 
@@ -58,10 +58,10 @@ const StatsCard: React.FC<StatsCardProps> = ({
   };
 
   return (
-    <AnimatedCard
+    <OptimizedAnimatedCard
       delay={delay}
       hoverEffect="lift"
-      className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50"
+      className="glass rounded-2xl p-6 border border-gray-700/50 will-change-transform"
     >
       <div className="flex items-center justify-between mb-4">
         <Icon className={`h-8 w-8 ${iconColor}`} />
@@ -79,8 +79,10 @@ const StatsCard: React.FC<StatsCardProps> = ({
       <div className="text-gray-400 text-sm font-medium">
         {title}
       </div>
-    </AnimatedCard>
+    </OptimizedAnimatedCard>
   );
-};
+});
+
+StatsCard.displayName = 'StatsCard';
 
 export default StatsCard;
