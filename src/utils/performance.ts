@@ -1,3 +1,5 @@
+import React from 'react';
+
 // Performance optimization utilities
 
 // Debounce function for expensive operations
@@ -89,16 +91,14 @@ export const measurePerformance = (name: string, fn: () => void) => {
 
 // Web Vitals tracking
 export const trackWebVitals = () => {
-  if ('web-vital' in window) {
-    // Track Core Web Vitals if library is available
-    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-      getCLS(console.log);
-      getFID(console.log);
-      getFCP(console.log);
-      getLCP(console.log);
-      getTTFB(console.log);
-    }).catch(() => {
-      // Silently fail if web-vitals is not available
-    });
-  }
+  // Track Core Web Vitals
+  import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+    getCLS(console.log);
+    getFID(console.log);
+    getFCP(console.log);
+    getLCP(console.log);
+    getTTFB(console.log);
+  }).catch(() => {
+    // Silently fail if web-vitals is not available
+  });
 };
