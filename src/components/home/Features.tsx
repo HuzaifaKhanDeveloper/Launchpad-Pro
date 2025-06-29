@@ -11,7 +11,8 @@ import {
   Zap,
   Target,
   CheckCircle,
-  TrendingUp
+  TrendingUp,
+  Rocket
 } from 'lucide-react';
 import AnimatedCard from '../common/AnimatedCard';
 import StatsCard from '../common/StatsCard';
