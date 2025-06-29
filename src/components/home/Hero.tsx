@@ -200,7 +200,7 @@ const Hero = () => {
                   {(() => {
                     const Icon = metrics[currentMetric].icon;
                     return (
-                      <div className={`p-3 rounded-xl bg-gradient-to-r ${metrics[currentMetric].bgColor} mr-4 animate-glow`}>
+                      <div className={`p-3 rounded-xl bg-gradient-to-r ${metrics[currentMetric].bgColor} mr-4 shadow-lg`}>
                         <Icon className="h-6 w-6 text-white" />
                       </div>
                     );
@@ -242,7 +242,7 @@ const Hero = () => {
                 className="glass rounded-2xl p-8 border border-gray-700/50 group hover:border-gray-600/50 transition-all duration-300"
               >
                 {/* Icon Container */}
-                <div className={`w-16 h-16 bg-gradient-to-r ${feature.iconBg} rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg animate-glow`}>
+                <div className={`w-16 h-16 bg-gradient-to-r ${feature.iconBg} rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                   <feature.icon className="h-8 w-8 text-white" />
                 </div>
                 
@@ -262,7 +262,7 @@ const Hero = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center group">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg animate-glow">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <stat.icon className="h-8 w-8 text-white" />
                   </div>
                   <div className="text-3xl lg:text-4xl font-bold gradient-text group-hover:scale-105 transition-transform duration-300">
@@ -314,7 +314,7 @@ const Hero = () => {
           <AnimatedCard delay={1700} direction="scale">
             <div className="glass rounded-3xl p-12 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-300 max-w-4xl mx-auto">
               <div className="flex items-center justify-center mb-6">
-                <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-3xl flex items-center justify-center animate-glow">
+                <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-3xl flex items-center justify-center shadow-lg">
                   <Rocket className="h-10 w-10 text-white" />
                 </div>
               </div>

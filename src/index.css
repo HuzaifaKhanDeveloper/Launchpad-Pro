@@ -67,15 +67,6 @@
   }
 }
 
-@keyframes glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
-  }
-}
-
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -196,10 +187,6 @@
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
-}
-
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
 }
 
 .animate-shimmer {
@@ -481,7 +468,6 @@ button, a, input, select, textarea {
     transition-duration: 0.01ms !important;
   }
   
-  .animate-glow,
   .animate-float,
   .animate-pulse-slow,
   .animate-spin-slow {

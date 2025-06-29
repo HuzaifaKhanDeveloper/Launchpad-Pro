@@ -231,7 +231,7 @@ const Features = () => {
                   onClick={() => setActiveFeature(index)}
                 >
                   <div className="flex items-center space-x-4">
-                    <div className={`w-14 h-14 bg-gradient-to-r ${feature.iconBg} rounded-2xl flex items-center justify-center shadow-lg animate-glow`}>
+                    <div className={`w-14 h-14 bg-gradient-to-r ${feature.iconBg} rounded-2xl flex items-center justify-center shadow-lg`}>
                       <FeatureIcon className="h-7 w-7 text-white" />
                     </div>
                     <div className="flex-1">
@@ -251,7 +251,7 @@ const Features = () => {
           <AnimatedCard direction="right" className="lg:sticky lg:top-8">
             <div className="glass rounded-3xl p-8 border border-gray-700/30 hover:border-gray-600/50 transition-all duration-300">
               <div className="flex items-center space-x-4 mb-8">
-                <div className={`w-20 h-20 bg-gradient-to-r ${features[activeFeature].iconBg} rounded-3xl flex items-center justify-center animate-glow shadow-xl`}>
+                <div className={`w-20 h-20 bg-gradient-to-r ${features[activeFeature].iconBg} rounded-3xl flex items-center justify-center shadow-xl`}>
                   {(() => {
                     const ActiveIcon = features[activeFeature].icon;
                     return <ActiveIcon className="h-10 w-10 text-white" />;
@@ -296,7 +296,7 @@ const Features = () => {
         {/* Bottom Section - Call to Action */}
         <AnimatedCard direction="scale" className="text-center">
           <div className="glass rounded-3xl p-12 border border-gray-700/30 hover:border-gray-600/50 transition-all duration-300 max-w-4xl mx-auto">
-            <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-3xl flex items-center justify-center mx-auto mb-8 animate-glow">
+            <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg">
               <Rocket className="h-10 w-10 text-white" />
             </div>
             <h3 className="text-4xl font-bold text-white mb-6">
