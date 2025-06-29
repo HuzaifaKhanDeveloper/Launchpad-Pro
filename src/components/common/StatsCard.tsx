@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { LucideIcon } from 'lucide-react';
+import { DivideIcon as LucideIcon } from 'lucide-react';
 import OptimizedAnimatedCard from './OptimizedAnimatedCard';
 
 interface StatsCardProps {
