@@ -6,6 +6,7 @@ interface AnimatedCardProps {
   hoverEffect?: 'lift' | 'glow' | 'scale' | 'none';
   delay?: number;
   direction?: 'up' | 'down' | 'left' | 'right' | 'scale';
+  onClick?: () => void;
 }
 
 const AnimatedCard: React.FC<AnimatedCardProps> = ({
@@ -13,7 +14,8 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
   className = '',
   hoverEffect = 'lift',
   delay = 0,
-  direction = 'up'
+  direction = 'up',
+  onClick
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -37,22 +39,23 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
   }, [delay]);
 
   const getAnimationClass = () => {
-    if (!isVisible) return 'opacity-0';
-    
-    switch (direction) {
-      case 'up':
-        return 'animate-fade-in-up';
-      case 'down':
-        return 'animate-fade-in-down';
-      case 'left':
-        return 'animate-slide-in-left';
-      case 'right':
-        return 'animate-slide-in-right';
-      case 'scale':
-        return 'animate-scale-in';
-      default:
-        return 'animate-fade-in-up';
+    if (!isVisible) {
+      switch (direction) {
+        case 'up':
+          return 'opacity-0 translate-y-8';
+        case 'down':
+          return 'opacity-0 -translate-y-8';
+        case 'left':
+          return 'opacity-0 translate-x-8';
+        case 'right':
+          return 'opacity-0 -translate-x-8';
+        case 'scale':
+          return 'opacity-0 scale-95';
+        default:
+          return 'opacity-0 translate-y-8';
+      }
     }
+    return 'opacity-100 translate-y-0 translate-x-0 scale-100';
   };
 
   const getHoverClass = () => {
@@ -60,7 +63,7 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
     
     switch (hoverEffect) {
       case 'lift':
-        return 'transform -translate-y-2 shadow-2xl';
+        return 'transform -translate-y-2 shadow-2xl shadow-blue-500/10';
       case 'glow':
         return 'shadow-2xl shadow-blue-500/25';
       case 'scale':
@@ -73,10 +76,12 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
   return (
     <div
       ref={cardRef}
+      onClick={onClick}
       className={`
-        transition-all duration-300 ease-out
+        transition-all duration-500 ease-out
         ${getAnimationClass()}
         ${getHoverClass()}
+        ${onClick ? 'cursor-pointer' : ''}
         ${className}
       `}
       onMouseEnter={() => setIsHovered(true)}

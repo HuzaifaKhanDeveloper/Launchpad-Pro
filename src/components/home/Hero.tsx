@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Shield, Box, BarChart3, Sparkles, TrendingUp, Lock, Zap } from 'lucide-react';
+import { ArrowRight, Shield, Box, BarChart3, Sparkles, TrendingUp, Lock, Zap, Rocket, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AnimatedCard from '../common/AnimatedCard';
 import GradientButton from '../common/GradientButton';
@@ -8,9 +8,18 @@ const Hero = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentMetric, setCurrentMetric] = useState(0);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [particlePositions, setParticlePositions] = useState<Array<{x: number, y: number, delay: number}>>([]);
 
   useEffect(() => {
     setIsLoaded(true);
+    
+    // Generate particle positions
+    const particles = Array.from({ length: 50 }, (_, i) => ({
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      delay: Math.random() * 2
+    }));
+    setParticlePositions(particles);
     
     // Rotate metrics every 3 seconds
     const interval = setInterval(() => {
@@ -32,7 +41,7 @@ const Hero = () => {
   const features = [
     {
       icon: Shield,
-      title: "Audit-Ready Security",
+      title: "Enterprise Security",
       description: "Built with OpenZeppelin standards and comprehensive security measures for maximum protection.",
       iconBg: "bg-blue-500",
       delay: 100
@@ -54,19 +63,17 @@ const Hero = () => {
   ];
 
   const metrics = [
-    { value: '$2.8M+', label: 'Total Value Launched', subtext: 'Across 50+ projects', icon: TrendingUp },
-    { value: '15,420', label: 'Active Participants', subtext: 'Verified investors', icon: Shield },
-    { value: '99.9%', label: 'Platform Uptime', subtext: 'Enterprise reliability', icon: Zap },
-    { value: '150+', label: 'Successful Launches', subtext: 'Zero security incidents', icon: Box }
+    { value: '$2.8M+', label: 'Total Value Launched', subtext: 'Across 50+ projects', icon: TrendingUp, color: 'from-green-400 to-emerald-400' },
+    { value: '15,420', label: 'Active Participants', subtext: 'Verified investors', icon: Shield, color: 'from-blue-400 to-cyan-400' },
+    { value: '99.9%', label: 'Platform Uptime', subtext: 'Enterprise reliability', icon: Zap, color: 'from-yellow-400 to-orange-400' },
+    { value: '150+', label: 'Successful Launches', subtext: 'Zero security incidents', icon: Box, color: 'from-purple-400 to-pink-400' }
   ];
 
-  const floatingElements = Array.from({ length: 6 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 100 + 50,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    delay: Math.random() * 2
-  }));
+  const testimonials = [
+    { name: "Alex Chen", role: "DeFi Protocol Founder", text: "LaunchPad Pro made our token launch seamless and secure." },
+    { name: "Sarah Johnson", role: "GameFi Developer", text: "The tier system and analytics are game-changing for our community." },
+    { name: "Michael Rodriguez", role: "Crypto Investor", text: "Best platform for discovering and participating in quality token sales." }
+  ];
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-900">
@@ -74,20 +81,24 @@ const Hero = () => {
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900/10 to-purple-900/10"></div>
         
-        {/* Floating elements */}
-        {floatingElements.map((element) => (
+        {/* Floating particles */}
+        {particlePositions.map((particle, i) => (
           <div
-            key={element.id}
-            className="absolute rounded-full bg-blue-500/5 blur-xl animate-float"
+            key={i}
+            className="absolute w-1 h-1 bg-blue-400/30 rounded-full animate-pulse"
             style={{
-              width: element.size,
-              height: element.size,
-              left: `${element.x}%`,
-              top: `${element.y}%`,
-              animationDelay: `${element.delay}s`
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              animationDelay: `${particle.delay}s`,
+              animationDuration: `${2 + Math.random() * 2}s`
             }}
           />
         ))}
+
+        {/* Gradient orbs */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
 
         {/* Mouse follower */}
         <div
@@ -104,16 +115,17 @@ const Hero = () => {
         <div className="text-center">
           {/* Badge */}
           <AnimatedCard delay={0} direction="down" className="mb-8">
-            <div className="inline-flex items-center space-x-2 glass rounded-full px-6 py-3 border border-slate-700/50">
+            <div className="inline-flex items-center space-x-2 glass rounded-full px-6 py-3 border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300">
               <Sparkles className="h-4 w-4 text-blue-400 animate-pulse" />
               <span className="text-blue-400 font-medium text-sm">Next-Gen Token Launchpad</span>
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             </div>
           </AnimatedCard>
           
           {/* Main Heading */}
           <AnimatedCard delay={200} direction="up">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 leading-tight">
-              <span className="block gradient-text text-shadow">
+              <span className="block gradient-text text-shadow animate-gradient-shift">
                 Launch Your Token
               </span>
               <span className="block text-white mt-2 text-shadow">
@@ -133,17 +145,19 @@ const Hero = () => {
           <AnimatedCard delay={600} direction="up" className="mb-20">
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/sales">
-                <GradientButton variant="primary" size="lg" className="group">
+                <GradientButton variant="primary" size="lg" className="group relative overflow-hidden">
                   <TrendingUp className="h-5 w-5" />
                   <span>Explore Token Sales</span>
                   <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 </GradientButton>
               </Link>
               
               <Link to="/create-sale">
-                <GradientButton variant="secondary" size="lg" className="group">
-                  <Lock className="h-5 w-5" />
+                <GradientButton variant="secondary" size="lg" className="group relative overflow-hidden">
+                  <Rocket className="h-5 w-5" />
                   <span>Launch Your Project</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 </GradientButton>
               </Link>
             </div>
@@ -151,14 +165,18 @@ const Hero = () => {
           
           {/* Live Metrics */}
           <AnimatedCard delay={700} direction="scale" className="mb-16">
-            <div className="glass rounded-2xl p-8 border border-slate-700/30 max-w-md mx-auto">
+            <div className="glass rounded-2xl p-8 border border-slate-700/30 max-w-md mx-auto hover:border-slate-600/50 transition-all duration-300">
               <div className="text-center">
                 <div className="flex items-center justify-center mb-4">
                   {(() => {
                     const Icon = metrics[currentMetric].icon;
-                    return <Icon className="h-8 w-8 text-blue-400 mr-3" />;
+                    return (
+                      <div className={`p-3 rounded-xl bg-gradient-to-r ${metrics[currentMetric].color} mr-3 animate-glow`}>
+                        <Icon className="h-6 w-6 text-white" />
+                      </div>
+                    );
                   })()}
-                  <div className="text-4xl font-bold gradient-text transition-all duration-500">
+                  <div className={`text-4xl font-bold bg-gradient-to-r ${metrics[currentMetric].color} bg-clip-text text-transparent transition-all duration-500`}>
                     {metrics[currentMetric].value}
                   </div>
                 </div>
@@ -185,14 +203,14 @@ const Hero = () => {
           </AnimatedCard>
           
           {/* Features Grid */}
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
             {features.map((feature, index) => (
               <AnimatedCard
                 key={index}
                 delay={800 + index * 100}
                 direction="up"
                 hoverEffect="lift"
-                className="glass rounded-2xl p-8 border border-slate-700/30 group"
+                className="glass rounded-2xl p-8 border border-slate-700/30 group hover:border-slate-600/50 transition-all duration-300"
               >
                 {/* Icon Container */}
                 <div className={`w-16 h-16 ${feature.iconBg} rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg animate-glow`}>
@@ -210,16 +228,46 @@ const Hero = () => {
             ))}
           </div>
           
+          {/* Testimonials */}
+          <AnimatedCard delay={1200} direction="up" className="mb-16">
+            <div className="max-w-4xl mx-auto">
+              <h3 className="text-2xl font-bold text-white mb-8">Trusted by Industry Leaders</h3>
+              <div className="grid md:grid-cols-3 gap-6">
+                {testimonials.map((testimonial, index) => (
+                  <div 
+                    key={index}
+                    className="glass rounded-xl p-6 border border-slate-700/30 hover:border-slate-600/50 transition-all duration-300 animate-fade-in-up"
+                    style={{ animationDelay: `${1300 + index * 100}ms` }}
+                  >
+                    <div className="flex items-center mb-4">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                      ))}
+                    </div>
+                    <p className="text-slate-300 text-sm mb-4 italic">"{testimonial.text}"</p>
+                    <div>
+                      <div className="text-white font-medium text-sm">{testimonial.name}</div>
+                      <div className="text-slate-400 text-xs">{testimonial.role}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </AnimatedCard>
+          
           {/* Bottom Stats */}
-          <AnimatedCard delay={1200} direction="up" className="mt-20">
+          <AnimatedCard delay={1500} direction="up" className="mb-20">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
               {[
-                { value: '50+', label: 'Projects Launched' },
-                { value: '$2.8M+', label: 'Total Raised' },
-                { value: '15K+', label: 'Active Users' },
-                { value: '99.9%', label: 'Platform Uptime' }
+                { value: '50+', label: 'Projects Launched', icon: Rocket },
+                { value: '$2.8M+', label: 'Total Raised', icon: TrendingUp },
+                { value: '15K+', label: 'Active Users', icon: Shield },
+                { value: '99.9%', label: 'Platform Uptime', icon: Zap }
               ].map((stat, index) => (
                 <div key={index} className="text-center group">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <stat.icon className="h-6 w-6 text-white" />
+                  </div>
                   <div className="text-3xl lg:text-4xl font-bold gradient-text group-hover:scale-105 transition-transform duration-300">
                     {stat.value}
                   </div>
@@ -231,21 +279,34 @@ const Hero = () => {
             </div>
           </AnimatedCard>
 
-          {/* Call to Action */}
-          <AnimatedCard delay={1400} direction="scale" className="mt-20">
-            <div className="glass rounded-3xl p-12 border border-slate-700/30 hover:border-slate-600/50 transition-all duration-300">
+          {/* Final CTA */}
+          <AnimatedCard delay={1700} direction="scale">
+            <div className="glass rounded-3xl p-12 border border-slate-700/30 hover:border-slate-600/50 transition-all duration-300 max-w-4xl mx-auto">
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center animate-glow">
+                  <Rocket className="h-8 w-8 text-white" />
+                </div>
+              </div>
               <h3 className="text-3xl font-bold text-white mb-4">
                 Ready to Launch Your Token?
               </h3>
               <p className="text-slate-300 text-lg mb-8 max-w-2xl mx-auto">
                 Join hundreds of successful projects that have launched on our platform with complete security and transparency.
               </p>
-              <Link to="/create-sale">
-                <GradientButton variant="primary" size="lg" className="group">
-                  <span>Get Started Today</span>
-                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                </GradientButton>
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/create-sale">
+                  <GradientButton variant="primary" size="lg" className="group">
+                    <span>Get Started Today</span>
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                  </GradientButton>
+                </Link>
+                <Link to="/analytics">
+                  <GradientButton variant="secondary" size="lg">
+                    <BarChart3 className="h-5 w-5" />
+                    <span>View Analytics</span>
+                  </GradientButton>
+                </Link>
+              </div>
             </div>
           </AnimatedCard>
         </div>

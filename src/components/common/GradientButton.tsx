@@ -25,11 +25,11 @@ const GradientButton: React.FC<GradientButtonProps> = ({
   const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number }>>([]);
 
   const variants = {
-    primary: 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600',
-    secondary: 'from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600',
-    success: 'from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600',
-    warning: 'from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600',
-    danger: 'from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600'
+    primary: 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg shadow-blue-500/25',
+    secondary: 'from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-500/25',
+    success: 'from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/25',
+    warning: 'from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 shadow-lg shadow-yellow-500/25',
+    danger: 'from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 shadow-lg shadow-red-500/25'
   };
 
   const sizes = {
@@ -63,13 +63,13 @@ const GradientButton: React.FC<GradientButtonProps> = ({
       onClick={handleClick}
       disabled={disabled || loading}
       className={`
-        relative overflow-hidden
+        relative overflow-hidden group
         bg-gradient-to-r ${variants[variant]}
         text-white font-semibold rounded-xl
         ${sizes[size]}
         transition-all duration-300 ease-out
         transform hover:scale-105 hover:shadow-xl
-        disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900
         ${className}
       `}
@@ -89,12 +89,12 @@ const GradientButton: React.FC<GradientButtonProps> = ({
       ))}
 
       {/* Shimmer effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
       {/* Content */}
       <span className="relative flex items-center justify-center space-x-2">
         {loading && <LoadingSpinner size="sm" color="white" />}
-        <span>{children}</span>
+        <span className="flex items-center space-x-2">{children}</span>
       </span>
     </button>
   );
