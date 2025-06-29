@@ -41,11 +41,10 @@ export const useStaking = () => {
       const amountWei = web3Service.parseEther(amount);
       
       // First approve the staking contract to spend tokens
-      const tokenContract = web3Service.getContract(CONTRACT_ADDRESSES.STAKING_TOKEN, ERC20_ABI);
-      
-      // Check current allowance
       const signer = web3Service.getSigner();
       const userAddress = await signer.getAddress();
+      
+      const tokenContract = web3Service.getContract(CONTRACT_ADDRESSES.STAKING_TOKEN, ERC20_ABI);
       const currentAllowance = await tokenContract.allowance(userAddress, CONTRACT_ADDRESSES.STAKING_CONTRACT);
       
       if (currentAllowance < amountWei) {
@@ -56,11 +55,15 @@ export const useStaking = () => {
       }
 
       // Then stake the tokens
-      const stakingContract = web3Service.getContract(CONTRACT_ADDRESSES.STAKING_CONTRACT, STAKING_CONTRACT_ABI);
-      const stakeTx = await stakingContract.stake(amountWei);
+      const tx = await web3Service.callContract(
+        CONTRACT_ADDRESSES.STAKING_CONTRACT,
+        STAKING_CONTRACT_ABI,
+        'stake',
+        [amountWei]
+      );
       
       toast.loading('Staking tokens...', { id: 'stake-tokens' });
-      const receipt = await web3Service.waitForTransaction(stakeTx.hash);
+      const receipt = await web3Service.waitForTransaction(tx.hash);
       
       if (receipt && receipt.status === 1) {
         toast.success('Tokens staked successfully!', { id: 'stake-tokens' });
@@ -70,19 +73,7 @@ export const useStaking = () => {
       }
     } catch (error: any) {
       console.error('Failed to stake tokens:', error);
-      
-      let errorMessage = 'Failed to stake tokens';
-      if (error.message.includes('user rejected')) {
-        errorMessage = 'Transaction cancelled by user';
-      } else if (error.message.includes('insufficient funds')) {
-        errorMessage = 'Insufficient token balance';
-      } else if (error.message.includes('exceeds balance')) {
-        errorMessage = 'Amount exceeds your token balance';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage, { id: 'stake-tokens' });
+      toast.error(error.message || 'Failed to stake tokens', { id: 'stake-tokens' });
       throw error;
     } finally {
       setIsLoading(false);
@@ -97,10 +88,14 @@ export const useStaking = () => {
 
     setIsLoading(true);
     try {
-      const contract = web3Service.getContract(CONTRACT_ADDRESSES.STAKING_CONTRACT, STAKING_CONTRACT_ABI);
       const amountWei = web3Service.parseEther(amount);
       
-      const tx = await contract.unstake(amountWei);
+      const tx = await web3Service.callContract(
+        CONTRACT_ADDRESSES.STAKING_CONTRACT,
+        STAKING_CONTRACT_ABI,
+        'unstake',
+        [amountWei]
+      );
       
       toast.loading('Unstaking tokens...', { id: 'unstake-tokens' });
       const receipt = await web3Service.waitForTransaction(tx.hash);
@@ -113,19 +108,7 @@ export const useStaking = () => {
       }
     } catch (error: any) {
       console.error('Failed to unstake tokens:', error);
-      
-      let errorMessage = 'Failed to unstake tokens';
-      if (error.message.includes('Tokens are still locked')) {
-        errorMessage = 'Tokens are still in lock period';
-      } else if (error.message.includes('Insufficient staked amount')) {
-        errorMessage = 'Insufficient staked amount';
-      } else if (error.message.includes('user rejected')) {
-        errorMessage = 'Transaction cancelled by user';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage, { id: 'unstake-tokens' });
+      toast.error(error.message || 'Failed to unstake tokens', { id: 'unstake-tokens' });
       throw error;
     } finally {
       setIsLoading(false);
@@ -140,9 +123,12 @@ export const useStaking = () => {
 
     setIsLoading(true);
     try {
-      const contract = web3Service.getContract(CONTRACT_ADDRESSES.STAKING_CONTRACT, STAKING_CONTRACT_ABI);
-      
-      const tx = await contract.claimRewards();
+      const tx = await web3Service.callContract(
+        CONTRACT_ADDRESSES.STAKING_CONTRACT,
+        STAKING_CONTRACT_ABI,
+        'claimRewards',
+        []
+      );
       
       toast.loading('Claiming rewards...', { id: 'claim-rewards' });
       const receipt = await web3Service.waitForTransaction(tx.hash);
@@ -155,17 +141,7 @@ export const useStaking = () => {
       }
     } catch (error: any) {
       console.error('Failed to claim rewards:', error);
-      
-      let errorMessage = 'Failed to claim rewards';
-      if (error.message.includes('No rewards to claim')) {
-        errorMessage = 'No rewards available to claim';
-      } else if (error.message.includes('user rejected')) {
-        errorMessage = 'Transaction cancelled by user';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage, { id: 'claim-rewards' });
+      toast.error(error.message || 'Failed to claim rewards', { id: 'claim-rewards' });
       throw error;
     } finally {
       setIsLoading(false);
@@ -178,8 +154,12 @@ export const useStaking = () => {
     }
 
     try {
-      const contract = web3Service.getContract(CONTRACT_ADDRESSES.STAKING_CONTRACT, STAKING_CONTRACT_ABI);
-      const stakeInfo = await contract.getUserStakeInfo(userAddress);
+      const stakeInfo = await web3Service.readContract(
+        CONTRACT_ADDRESSES.STAKING_CONTRACT,
+        STAKING_CONTRACT_ABI,
+        'getUserStakeInfo',
+        [userAddress]
+      );
       
       return {
         stakedAmount: parseFloat(web3Service.formatEther(stakeInfo[0])),
@@ -202,8 +182,12 @@ export const useStaking = () => {
     }
 
     try {
-      const contract = web3Service.getContract(CONTRACT_ADDRESSES.STAKING_CONTRACT, STAKING_CONTRACT_ABI);
-      const config = await contract.getTierConfig(tier);
+      const config = await web3Service.readContract(
+        CONTRACT_ADDRESSES.STAKING_CONTRACT,
+        STAKING_CONTRACT_ABI,
+        'getTierConfig',
+        [tier]
+      );
       
       return {
         minStakeAmount: parseFloat(web3Service.formatEther(config[0])),
@@ -224,8 +208,12 @@ export const useStaking = () => {
     }
 
     try {
-      const contract = web3Service.getContract(CONTRACT_ADDRESSES.STAKING_CONTRACT, STAKING_CONTRACT_ABI);
-      const stats = await contract.getPlatformStats();
+      const stats = await web3Service.readContract(
+        CONTRACT_ADDRESSES.STAKING_CONTRACT,
+        STAKING_CONTRACT_ABI,
+        'getPlatformStats',
+        []
+      );
       
       return {
         totalStaked: parseFloat(web3Service.formatEther(stats[0])),
@@ -245,8 +233,12 @@ export const useStaking = () => {
     }
 
     try {
-      const contract = web3Service.getContract(CONTRACT_ADDRESSES.STAKING_TOKEN, ERC20_ABI);
-      const balance = await contract.balanceOf(userAddress);
+      const balance = await web3Service.readContract(
+        CONTRACT_ADDRESSES.STAKING_TOKEN,
+        ERC20_ABI,
+        'balanceOf',
+        [userAddress]
+      );
       return parseFloat(web3Service.formatEther(balance));
     } catch (error: any) {
       console.error('Failed to get token balance:', error);
@@ -262,10 +254,14 @@ export const useStaking = () => {
 
     setIsLoading(true);
     try {
-      const contract = web3Service.getContract(CONTRACT_ADDRESSES.STAKING_TOKEN, ERC20_ABI);
       const amountWei = web3Service.parseEther(amount);
       
-      const tx = await contract.faucet(amountWei);
+      const tx = await web3Service.callContract(
+        CONTRACT_ADDRESSES.STAKING_TOKEN,
+        ERC20_ABI,
+        'faucet',
+        [amountWei]
+      );
       
       toast.loading('Requesting tokens from faucet...', { id: 'faucet-tokens' });
       const receipt = await web3Service.waitForTransaction(tx.hash);
@@ -278,17 +274,7 @@ export const useStaking = () => {
       }
     } catch (error: any) {
       console.error('Failed to get tokens from faucet:', error);
-      
-      let errorMessage = 'Failed to get tokens from faucet';
-      if (error.message.includes('Max 1000 tokens per request')) {
-        errorMessage = 'Maximum 1000 tokens per request';
-      } else if (error.message.includes('user rejected')) {
-        errorMessage = 'Transaction cancelled by user';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage, { id: 'faucet-tokens' });
+      toast.error(error.message || 'Failed to get tokens from faucet', { id: 'faucet-tokens' });
       throw error;
     } finally {
       setIsLoading(false);

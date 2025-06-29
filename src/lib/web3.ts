@@ -29,7 +29,17 @@ export const TIER_SYSTEM_ABI = [
   "function stakeTokens(uint256) external",
   "function unstakeTokens(uint256) external",
   "function getUserTierInfo(address) external view returns (uint8,uint256,uint256,uint256,uint256)",
-  "function recordParticipation(address) external"
+  "function recordParticipation(address) external",
+  "function getTierConfig(uint8) external view returns (uint256,uint256,uint256,bool,uint256)",
+  "function updateTierConfig(uint8,uint256,uint256,uint256,uint256,uint256) external",
+  "function forceUpdateUserTier(address) external",
+  "function participationWindow() external view returns (uint256)",
+  "function stakedBalances(address) external view returns (uint256)",
+  "function totalStaked() external view returns (uint256)",
+  "event TierUpdated(address indexed,uint8)",
+  "event TokensStaked(address indexed,uint256)",
+  "event TokensUnstaked(address indexed,uint256)",
+  "event ParticipationRecorded(address indexed)"
 ];
 
 export const STAKING_CONTRACT_ABI = [
@@ -61,7 +71,15 @@ export const ERC20_ABI = [
   "function faucet(uint256) external"
 ];
 
-// Contract addresses
+export const ERC721_ABI = [
+  "function balanceOf(address) external view returns (uint256)",
+  "function ownerOf(uint256) external view returns (address)",
+  "function mint(address) external",
+  "function publicMint() external",
+  "function tokenURI(uint256) external view returns (string)"
+];
+
+// Contract addresses from environment variables
 export const CONTRACT_ADDRESSES = {
   TOKEN_SALE_FACTORY: import.meta.env.VITE_TOKEN_SALE_CONTRACT || '',
   VESTING: import.meta.env.VITE_VESTING_CONTRACT || '',
@@ -174,6 +192,13 @@ export class Web3Service {
     return new ethers.Contract(address, abi, this.signer);
   }
 
+  getReadOnlyContract(address: string, abi: any[]): ethers.Contract {
+    if (!this.provider) {
+      throw new Error('Provider not initialized');
+    }
+    return new ethers.Contract(address, abi, this.provider);
+  }
+
   getProvider(): ethers.BrowserProvider {
     if (!this.provider) {
       throw new Error('Provider not initialized');
@@ -214,6 +239,144 @@ export class Web3Service {
       throw new Error('Provider not initialized');
     }
     return this.provider.waitForTransaction(txHash);
+  }
+
+  // Contract interaction helpers
+  async callContract(
+    contractAddress: string,
+    abi: any[],
+    method: string,
+    params: any[] = [],
+    options: any = {}
+  ): Promise<any> {
+    try {
+      const contract = this.getContract(contractAddress, abi);
+      return await contract[method](...params, options);
+    } catch (error: any) {
+      console.error(`Contract call failed for ${method}:`, error);
+      throw this.parseContractError(error);
+    }
+  }
+
+  async readContract(
+    contractAddress: string,
+    abi: any[],
+    method: string,
+    params: any[] = []
+  ): Promise<any> {
+    try {
+      const contract = this.getReadOnlyContract(contractAddress, abi);
+      return await contract[method](...params);
+    } catch (error: any) {
+      console.error(`Contract read failed for ${method}:`, error);
+      throw this.parseContractError(error);
+    }
+  }
+
+  private parseContractError(error: any): Error {
+    if (error.reason) {
+      return new Error(error.reason);
+    }
+    if (error.message.includes('user rejected')) {
+      return new Error('Transaction cancelled by user');
+    }
+    if (error.message.includes('insufficient funds')) {
+      return new Error('Insufficient funds for transaction');
+    }
+    if (error.message.includes('execution reverted')) {
+      return new Error('Transaction failed - contract execution reverted');
+    }
+    return new Error(error.message || 'Transaction failed');
+  }
+
+  // Tier system integration
+  async getUserTierFromContract(userAddress: string): Promise<{
+    tier: number;
+    allocationMultiplier: number;
+    earlyAccessHours: number;
+    stakedAmount: number;
+    participationCount: number;
+  }> {
+    if (!CONTRACT_ADDRESSES.TIER_SYSTEM) {
+      // Fallback to staking contract if tier system not available
+      return this.getUserTierFromStaking(userAddress);
+    }
+
+    try {
+      const tierInfo = await this.readContract(
+        CONTRACT_ADDRESSES.TIER_SYSTEM,
+        TIER_SYSTEM_ABI,
+        'getUserTierInfo',
+        [userAddress]
+      );
+
+      return {
+        tier: Number(tierInfo[0]),
+        allocationMultiplier: Number(tierInfo[1]),
+        earlyAccessHours: Number(tierInfo[2]),
+        stakedAmount: parseFloat(this.formatEther(tierInfo[3])),
+        participationCount: Number(tierInfo[4])
+      };
+    } catch (error) {
+      console.warn('Failed to get tier from tier system, falling back to staking contract:', error);
+      return this.getUserTierFromStaking(userAddress);
+    }
+  }
+
+  private async getUserTierFromStaking(userAddress: string): Promise<{
+    tier: number;
+    allocationMultiplier: number;
+    earlyAccessHours: number;
+    stakedAmount: number;
+    participationCount: number;
+  }> {
+    if (!CONTRACT_ADDRESSES.STAKING_CONTRACT) {
+      return {
+        tier: 0,
+        allocationMultiplier: 100,
+        earlyAccessHours: 0,
+        stakedAmount: 0,
+        participationCount: 0
+      };
+    }
+
+    try {
+      const stakeInfo = await this.readContract(
+        CONTRACT_ADDRESSES.STAKING_CONTRACT,
+        STAKING_CONTRACT_ABI,
+        'getUserStakeInfo',
+        [userAddress]
+      );
+
+      return {
+        tier: Number(stakeInfo[2]),
+        allocationMultiplier: [100, 250, 500, 1000][Number(stakeInfo[2])] || 100,
+        earlyAccessHours: [0, 1, 2, 4][Number(stakeInfo[2])] || 0,
+        stakedAmount: parseFloat(this.formatEther(stakeInfo[0])),
+        participationCount: 0 // Not available in staking contract
+      };
+    } catch (error) {
+      console.error('Failed to get tier from staking contract:', error);
+      return {
+        tier: 0,
+        allocationMultiplier: 100,
+        earlyAccessHours: 0,
+        stakedAmount: 0,
+        participationCount: 0
+      };
+    }
+  }
+
+  // Check contract availability
+  isContractAvailable(contractName: keyof typeof CONTRACT_ADDRESSES): boolean {
+    return Boolean(CONTRACT_ADDRESSES[contractName]);
+  }
+
+  // Get all available contracts
+  getAvailableContracts(): string[] {
+    return Object.entries(CONTRACT_ADDRESSES)
+      .filter(([_, address]) => Boolean(address))
+      .map(([name, _]) => name);
   }
 }
 

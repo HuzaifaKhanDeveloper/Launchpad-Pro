@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { User } from '../types';
+import { web3Service } from '../lib/web3';
 
 interface AuthState {
   user: User | null;
@@ -9,6 +10,7 @@ interface AuthState {
   disconnectWallet: () => void;
   updateTier: (tier: User['tier']) => void;
   updateStakedAmount: (amount: number) => void;
+  refreshUserData: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -20,17 +22,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     
     try {
-      // In a real app, you would fetch user data from your backend API
-      // For now, we'll create a mock user or load from localStorage
+      // Load existing user data or create new user
       const existingUser = localStorage.getItem(`user_${address}`);
       
       let user: User;
       if (existingUser) {
         user = JSON.parse(existingUser);
-        // Ensure the user object has the current address
-        user.address = address;
+        user.address = address; // Ensure current address
       } else {
-        // Create new user (removed KYC status)
         user = {
           id: address,
           address,
@@ -39,10 +38,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           stakedAmount: 0,
           createdAt: new Date(),
         };
-        localStorage.setItem(`user_${address}`, JSON.stringify(user));
       }
 
-      console.log('Auth store - connecting wallet with user:', user);
+      // Try to get tier info from contracts
+      try {
+        const tierInfo = await web3Service.getUserTierFromContract(address);
+        const tierNames = ['bronze', 'silver', 'gold', 'platinum'] as const;
+        user.tier = tierNames[tierInfo.tier] || 'bronze';
+        user.stakedAmount = tierInfo.stakedAmount;
+      } catch (error) {
+        console.warn('Could not fetch tier info from contracts:', error);
+      }
+
+      // Save updated user data
+      localStorage.setItem(`user_${address}`, JSON.stringify(user));
       
       set({ 
         user, 
@@ -56,7 +65,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   disconnectWallet: () => {
-    console.log('Auth store - disconnecting wallet');
     set({ 
       user: null, 
       isConnected: false 
@@ -78,6 +86,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const updatedUser = { ...user, stakedAmount };
       localStorage.setItem(`user_${user.address}`, JSON.stringify(updatedUser));
       set({ user: updatedUser });
+    }
+  },
+
+  refreshUserData: async () => {
+    const { user } = get();
+    if (!user) return;
+
+    try {
+      const tierInfo = await web3Service.getUserTierFromContract(user.address);
+      const tierNames = ['bronze', 'silver', 'gold', 'platinum'] as const;
+      
+      const updatedUser = {
+        ...user,
+        tier: tierNames[tierInfo.tier] || 'bronze',
+        stakedAmount: tierInfo.stakedAmount
+      };
+
+      localStorage.setItem(`user_${user.address}`, JSON.stringify(updatedUser));
+      set({ user: updatedUser });
+    } catch (error) {
+      console.warn('Could not refresh user data from contracts:', error);
     }
   },
 }));

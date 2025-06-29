@@ -24,15 +24,19 @@ export const useTokenSale = () => {
 
     setIsLoading(true);
     try {
-      const contract = web3Service.getContract(CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY, TOKEN_SALE_FACTORY_ABI);
-      
       // Parse amounts with proper precision
       const tokenAmountWei = web3Service.parseEther(tokenAmount);
       const ethAmountWei = web3Service.parseEther(ethAmount);
 
       // Validate sale exists and is active
       try {
-        const saleInfo = await contract.getSaleInfo(saleId);
+        const saleInfo = await web3Service.readContract(
+          CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY,
+          TOKEN_SALE_FACTORY_ABI,
+          'getSaleInfo',
+          [saleId]
+        );
+        
         if (!saleInfo || saleInfo[10] !== 1) { // status should be 1 for active
           throw new Error('Sale is not active or does not exist');
         }
@@ -40,39 +44,25 @@ export const useTokenSale = () => {
         throw new Error('Invalid sale ID or sale not found');
       }
 
-      // Estimate gas first to catch potential failures
-      let gasEstimate;
+      // Get user's tier info for allocation checking
+      const signer = web3Service.getSigner();
+      const userAddress = await signer.getAddress();
+      
       try {
-        gasEstimate = await contract.buyTokens.estimateGas(
-          saleId, 
-          tokenAmountWei,
-          { value: ethAmountWei }
-        );
-      } catch (estimateError: any) {
-        console.error('Gas estimation failed:', estimateError);
-        
-        // Parse common revert reasons
-        if (estimateError.message.includes('exceeds available supply')) {
-          throw new Error('Not enough tokens available in sale');
-        } else if (estimateError.message.includes('insufficient funds')) {
-          throw new Error('Insufficient ETH balance');
-        } else if (estimateError.message.includes('Sale not active')) {
-          throw new Error('Sale is not currently active');
-        } else if (estimateError.message.includes('exceeds tier allocation')) {
-          throw new Error('Purchase exceeds your tier allocation');
-        } else {
-          throw new Error('Transaction would fail. Please check sale conditions.');
-        }
+        const tierInfo = await web3Service.getUserTierFromContract(userAddress);
+        console.log('User tier info:', tierInfo);
+      } catch (error) {
+        console.warn('Could not get tier info, proceeding with purchase:', error);
       }
 
-      // Add 20% buffer to gas estimate
-      const gasLimit = Math.floor(Number(gasEstimate) * 1.2);
-
-      // Execute transaction with proper gas limit
-      const tx = await contract.buyTokens(saleId, tokenAmountWei, {
-        value: ethAmountWei,
-        gasLimit: gasLimit
-      });
+      // Execute transaction
+      const tx = await web3Service.callContract(
+        CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY,
+        TOKEN_SALE_FACTORY_ABI,
+        'buyTokens',
+        [saleId, tokenAmountWei],
+        { value: ethAmountWei }
+      );
 
       toast.loading('Transaction submitted...', { id: 'buy-tokens' });
       
@@ -86,27 +76,7 @@ export const useTokenSale = () => {
       }
     } catch (error: any) {
       console.error('Failed to buy tokens:', error);
-      
-      // Enhanced error handling
-      let errorMessage = 'Failed to buy tokens';
-      
-      if (error.message.includes('user rejected')) {
-        errorMessage = 'Transaction cancelled by user';
-      } else if (error.message.includes('insufficient funds')) {
-        errorMessage = 'Insufficient ETH balance';
-      } else if (error.message.includes('exceeds available supply')) {
-        errorMessage = 'Not enough tokens available';
-      } else if (error.message.includes('Sale not active')) {
-        errorMessage = 'Sale is not currently active';
-      } else if (error.message.includes('Invalid sale ID')) {
-        errorMessage = 'Sale not found';
-      } else if (error.message.includes('exceeds tier allocation')) {
-        errorMessage = 'Purchase exceeds your tier allocation';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage, { id: 'buy-tokens' });
+      toast.error(error.message || 'Failed to buy tokens', { id: 'buy-tokens' });
       throw error;
     } finally {
       setIsLoading(false);
@@ -121,11 +91,12 @@ export const useTokenSale = () => {
 
     setIsLoading(true);
     try {
-      const contract = web3Service.getContract(CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY, TOKEN_SALE_FACTORY_ABI);
-      
-      const tx = await contract.claimTokens(saleId, {
-        gasLimit: 200000
-      });
+      const tx = await web3Service.callContract(
+        CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY,
+        TOKEN_SALE_FACTORY_ABI,
+        'claimTokens',
+        [saleId]
+      );
 
       toast.loading('Claiming tokens...', { id: 'claim-tokens' });
       
@@ -152,8 +123,12 @@ export const useTokenSale = () => {
     }
 
     try {
-      const contract = web3Service.getContract(CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY, TOKEN_SALE_FACTORY_ABI);
-      const saleInfo = await contract.getSaleInfo(saleId);
+      const saleInfo = await web3Service.readContract(
+        CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY,
+        TOKEN_SALE_FACTORY_ABI,
+        'getSaleInfo',
+        [saleId]
+      );
       
       return {
         token: saleInfo[0],
@@ -181,8 +156,12 @@ export const useTokenSale = () => {
     }
 
     try {
-      const contract = web3Service.getContract(CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY, TOKEN_SALE_FACTORY_ABI);
-      const contribution = await contract.getUserContribution(saleId, userAddress);
+      const contribution = await web3Service.readContract(
+        CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY,
+        TOKEN_SALE_FACTORY_ABI,
+        'getUserContribution',
+        [saleId, userAddress]
+      );
       return contribution;
     } catch (error: any) {
       console.error('Failed to get user contribution:', error);
@@ -208,28 +187,31 @@ export const useTokenSale = () => {
 
     setIsLoading(true);
     try {
-      const contract = web3Service.getContract(CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY, TOKEN_SALE_FACTORY_ABI);
-      
       // First approve tokens
-      const tokenContract = web3Service.getContract(saleData.tokenAddress, ERC20_ABI);
       const totalSupplyWei = web3Service.parseEther(saleData.totalSupply);
       
+      const tokenContract = web3Service.getContract(saleData.tokenAddress, ERC20_ABI);
       const approveTx = await tokenContract.approve(CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY, totalSupplyWei);
       toast.loading('Approving tokens...', { id: 'create-sale' });
       await web3Service.waitForTransaction(approveTx.hash);
       
       // Create sale
-      const tx = await contract.createSale(
-        saleData.tokenAddress,
-        web3Service.parseEther(saleData.tokenPrice),
-        totalSupplyWei,
-        web3Service.parseEther(saleData.softCap),
-        web3Service.parseEther(saleData.hardCap),
-        saleData.startTime,
-        saleData.endTime,
-        saleData.saleType,
-        saleData.whitelistEnabled,
-        ethers.ZeroHash // No merkle root for now
+      const tx = await web3Service.callContract(
+        CONTRACT_ADDRESSES.TOKEN_SALE_FACTORY,
+        TOKEN_SALE_FACTORY_ABI,
+        'createSale',
+        [
+          saleData.tokenAddress,
+          web3Service.parseEther(saleData.tokenPrice),
+          totalSupplyWei,
+          web3Service.parseEther(saleData.softCap),
+          web3Service.parseEther(saleData.hardCap),
+          saleData.startTime,
+          saleData.endTime,
+          saleData.saleType,
+          saleData.whitelistEnabled,
+          ethers.ZeroHash // No merkle root for now
+        ]
       );
 
       toast.loading('Creating sale...', { id: 'create-sale' });
